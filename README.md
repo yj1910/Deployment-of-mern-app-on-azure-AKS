@@ -67,14 +67,51 @@ kubectl config set-context --current --namespace <namespace_name>
 5. Enable DNS resolution on kubernetes cluster :
 Check coredns pod in kube-system namespace and you will find Both coredns pods are running on master(system) node
 ```bash kubectl get pods -n kube-system -o wide | grep -i core ```
-   
 We also need to run coredns pod in worker node on worker node as well for DNS resolution
 ```bash kubectl edit deploy coredns -n kube-system -o yaml ```
+
 Make 'replicas' count from 2 to 4
 
-6. Navigate to frontend directory :
+7. Change the env variable of frontend-
+Navigate to frontend directory :
 ```bash cd frontend ```
 .env.docker file and change the public IP Address with your worker node public IP :
 ```bash vi .env.docker ```
 
 ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/69900c6f-43d8-4044-a184-744b6fc714c7)
+
+9. Navigate to backend directory :
+ ```bash cd ../backend/ ```
+Change the env variable of backend-
+Open .env.docker file and edit below variables :
+
+MONGODB_URI: <your-mongodb-servicename>
+REDIS_URL: <your-redis-servicename>
+FRONTEND_URL: <your-workernode-publicIP>
+Note: To get service names, check mongodb.yaml, redis.yaml
+
+![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/e35798e8-bb9e-4a94-af4c-d22eba15ec7f)
+
+#### step 4 - Build Docker image and push it to dockerhub 
+1. Build backend docker image :
+```bash
+cd wanderlust/backend
+docker build -t yjain75/backend-wanderlust:latest . #build the image from dockerfile
+docker login
+docker push yjain75/backend-wanderlust:latest       #push the image to docker hub
+```
+2. Build frontend docker image :
+```bash
+cd wanderlust/frontend
+docker build -t yjain75/frontend-wanderlust:latest . #build the image from dockerfile
+docker push yjain75/fromtend-wanderlust:latest       #push the image to docker hub
+```
+#### step 5 - Once, Image is pushed to DockerHub, navigate to kubernetes directory
+```bash cd kubernetes ```
+
+#### step 5 - Build Docker image and push it to dockerhub 
+
+
+10. 
+
+
