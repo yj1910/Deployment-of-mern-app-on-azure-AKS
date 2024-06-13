@@ -5,7 +5,7 @@
 2. knowledage of Docker and docker hub
 3. Basics of azure kubernetes architecture
 
-#### step 1 - create a azure cluster(aks) by azure portal below are configuration -
+### Step 1 - Create a azure cluster(aks) by azure portal below are configuration -
 Basics
 Subscription: Free Trial
 Resource Group: Creat New: aks-rg1
@@ -29,7 +29,7 @@ Rest all leave to defaults
 
 Create and review
 
-#### step 2 - connect to the aks cluster-
+#### Step 2 - Connect to the aks cluster-
 1.Connect to the azure cli
 ```bash
 az account set --subscription <subscription_ID>   #Set the cluster subscription
@@ -50,7 +50,7 @@ kubectl get nodes  #List AKS Nodes
 kubectl get nodes -o wide
 ```
 
-#### step 3 - 
+#### Step 3 - Setup the configuration for deployment
 
 1. Clone code from remote repository (GitHub) -
 git clone -b devops https://github.com/DevMadhup/wanderlust.git
@@ -70,13 +70,13 @@ Check coredns pod in kube-system namespace and you will find Both coredns pods a
 We also need to run coredns pod in worker node on worker node as well for DNS resolution
 ```bash kubectl edit deploy coredns -n kube-system -o yaml ```
 
-Make 'replicas' count from 2 to 4
+**Make 'replicas' count from 2 to 4**
 
 7. Change the env variable of frontend-
-Navigate to frontend directory :
-```bash cd frontend ```
-.env.docker file and change the public IP Address with your worker node public IP :
-```bash vi .env.docker ```
+ Navigate to frontend directory :
+ ```bash cd frontend ```
+ .env.docker file and change the public IP Address with your worker node public IP :
+ ```bash vi .env.docker ```
 
 ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/69900c6f-43d8-4044-a184-744b6fc714c7)
 
@@ -92,7 +92,7 @@ Note: To get service names, check mongodb.yaml, redis.yaml
 
 ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/e35798e8-bb9e-4a94-af4c-d22eba15ec7f)
 
-#### step 4 - Build Docker image and push it to dockerhub 
+### Step 4 - Build Docker image and push it to dockerhub 
 1. Build backend docker image :
 ```bash
 cd wanderlust/backend
@@ -106,12 +106,63 @@ cd wanderlust/frontend
 docker build -t yjain75/frontend-wanderlust:latest . #build the image from dockerfile
 docker push yjain75/fromtend-wanderlust:latest       #push the image to docker hub
 ```
-#### step 5 - Once, Image is pushed to DockerHub, navigate to kubernetes directory
+
+### Step 5 - Apply the kubernetes files/manifest files
+Once, Image is pushed to DockerHub, navigate to kubernetes directory
 ```bash cd kubernetes ```
 
-#### step 5 - Build Docker image and push it to dockerhub 
+Create persistent volume :
+```bash kubectl apply -f persistentVolume.yaml ```
+
+Create persistent volume Claim :
+```bash kubectl apply -f persistentVolumeClaim.yaml ```
+
+Create MongoDB deployment and service :
+bash``` kubectl apply -f mongodb.yaml ```
+
+Create Redis deployment and service :
+```bash kubectl apply -f redis.yaml ```
+
+**Note: Wait for 3-4 mins to get mongodb, redis pods and service should be up, otherwise backend-service will not connect.**
+
+Create Backend deployment and service :
+```bash kubectl apply -f backend.yaml ```
+
+Create Frontend deployment and service :
+```bash kubectl apply -f frontend.yaml ```
+
+Check out all pods and services are up and run:
+kubectl get all - n <namespace_name>
 
 
-10. 
+### Step 6 - Download ingress controller and apply it via loadbalancer
+
+1. Install the nginx ingress controller-
+   ```bash kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.3.0/deploy/static/provider/cloud/deploy.yaml ```
+   ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/51ed30bb-87a5-4a5f-9e6b-44e72066347f)
+
+2. check all the pods are running or not-
+   ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/68f92ba7-bade-4d47-ac43-0fd95774e742)
+
+3. The command below will let you check if the NGINX Ingress controller has a public IP address already assigned to it.
+   ```bash kubectl get service ingress-nginx-controller --namespace=ingress-nginx ```
+   ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/04505835-37fc-4171-8904-58e446562912)
+
+Note: the service type is LoadBalancer:
+kubernetes ingress - loadbalancer
+Browsing to this IP address will show you the NGINX 404 page. This is because we have not set up any routing rules for our services yet.
+
+4. Setup the ingress by apply ingress.yaml. Now we will set up frontend and backend and route traffic between them using NGINX.
+```bash kubectl apply -f ingress.yaml --namespace ingress-nginx ```
+
+5. Now check When you open the EXTERNAL_IP/public_IP frontend page will open you should see the screen below
+   ![image](https://github.com/yj1910/Deployment-of-3-tier-mern-app/assets/83238190/7f85d1dd-77f6-4dab-bef7-0a72f3fd0868)
+   
+
+
+
+
+
+
 
 
